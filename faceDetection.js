@@ -1,0 +1,19 @@
+const faceapi = require('face-api.js');
+
+const { canvas, faceDetectionNet, faceDetectionOptions, saveFile } =  require('./commons');
+
+async function run() {
+
+  await faceDetectionNet.loadFromDisk('../../weights')
+
+  const img = await canvas.loadImage('../images/bbt1.jpg')
+  const detections = await faceapi.detectAllFaces(img, faceDetectionOptions)
+
+  const out = faceapi.createCanvasFromMedia(img);
+  faceapi.draw.drawDetections(out, detections)
+
+  saveFile('faceDetection.jpg', out.toBuffer('image/jpeg'))
+  console.log('done, saved results to out/faceDetection.jpg')
+}
+
+run()
