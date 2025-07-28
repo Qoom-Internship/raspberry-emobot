@@ -1,5 +1,4 @@
 const faceapi = require('face-api.js');
-// const NodeWebcam = require('node-webcam');
 const fs = require('fs');
 const path = require('path');
 const { execSync } = require('child_process');
@@ -18,8 +17,8 @@ function saveFile(fileName, data) {
   fs.writeFileSync(path.resolve(baseDir, fileName), data);
 }
 
-// Configure webcam options
-const webcamOptions = {
+// Configure camera options
+const cameraOptions = {
   width: 1280,
   height: 720,
   quality: 100,
@@ -45,12 +44,12 @@ const webcamOptions = {
   }
 };
 
-async function captureFromWebcam() {
+async function captureFromWPiCamera() {
   try {
     console.log('Capturing image from Pi Camera...');
 
     const timestamp = Date.now();
-    const filename = `webcam_capture_${timestamp}.jpg`;
+    const filename = `pi_camera_capture_${timestamp}.jpg`;
     const filePath = path.resolve(__dirname, filename);
 
     // 2초간 카메라 준비 후 촬영
@@ -102,7 +101,7 @@ async function saveDetectionResults(imagePath, detections) {
   const results = {
     timestamp: new Date().toISOString(),
     originalImage: imagePath,
-    imageSize: { width: webcamOptions.width, height: webcamOptions.height },
+    imageSize: { width: cameraOptions.width, height: cameraOptions.height },
     facesDetected: detections.length,
     faces: detections.map((detection, index) => ({
       faceId: index + 1,
@@ -132,7 +131,7 @@ async function saveDetectionResults(imagePath, detections) {
 
 async function run() {
   try {
-    console.log('=== Webcam Face Detection Script (Simplified) ===');
+    console.log('=== Pi Camera Face Detection Script (Simplified) ===');
     console.log('Loading face detection model...');
     
     // For the simplified version, we'll skip actual model loading
@@ -140,8 +139,8 @@ async function run() {
     console.log('✓ Face detection model loaded (mock)');
     console.log('');
     
-    // Capture image from webcam
-    const capturedImagePath = await captureFromWebcam();
+    // Capture image from camera
+    const capturedImagePath = await captureFromPiCamera();
     
     // Detect faces in the captured image
     const { imagePath, detections } = await detectFacesInImage(capturedImagePath);
