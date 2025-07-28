@@ -1,7 +1,8 @@
 const faceapi = require('face-api.js');
-const NodeWebcam = require('node-webcam');
+// const NodeWebcam = require('node-webcam');
 const fs = require('fs');
 const path = require('path');
+const { execSync } = require('child_process');
 
 // Face detection configuration (without Canvas dependency)
 const faceDetectionNet = faceapi.nets.ssdMobilenetv1;
@@ -45,25 +46,21 @@ const webcamOptions = {
 };
 
 async function captureFromWebcam() {
-  return new Promise((resolve, reject) => {
-    console.log('Capturing image from webcam...');
-    
-    // Create webcam instance
-    const webcam = NodeWebcam.create(webcamOptions);
-    
-    // Capture image
+  try {
+    console.log('Capturing image from Pi Camera...');
+
     const timestamp = Date.now();
-    const filename = `webcam_capture_${timestamp}`;
-    
-    webcam.capture(filename, (err, data) => {
-      if (err) {
-        reject(new Error(`Failed to capture image: ${err.message}`));
-      } else {
-        console.log(`Image captured: ${data}`);
-        resolve(data);
-      }
-    });
-  });
+    const filename = `webcam_capture_${timestamp}.jpg`;
+    const filePath = path.resolve(__dirname, filename);
+
+    // 2초간 카메라 준비 후 촬영
+    execSync(`libcamera-still -t 2000 -o ${filePath} --nopreview`, { stdio: 'ignore' });
+
+    console.log(`Image captured: ${filePath}`);
+    return filePath;
+  } catch (error) {
+    throw new Error(`Failed to capture image with Pi Camera: ${error.message}`);
+  }
 }
 
 async function detectFacesInImage(imagePath) {
