@@ -1,1 +1,8 @@
 models/
+node_modules/
+*.jpg
+*.jpeg
+*.png
+*.pyc
+.env
+.DS_Store

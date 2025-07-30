@@ -1,0 +1,27 @@
+{
+  "name": "pi-emotion-detection",
+  "version": "1.0.0",
+  "description": "Emotion detection using OpenCV.js on Raspberry Pi 5",
+  "main": "emotion-detector.js",
+  "scripts": {
+    "start": "node emotion-detector.js",
+    "dev": "node --watch emotion-detector.js"
+  },
+  "dependencies": {
+    "fs-extra": "^11.2.0",
+    "node-webcam": "^0.8.0",
+    "onoff": "^6.0.3",
+    "opencv.js": "^1.2.1",
+    "pigpio": "^3.3.1",
+    "sharp": "^0.33.2"
+  },
+  "keywords": [
+    "opencv",
+    "emotion",
+    "detection",
+    "raspberry-pi",
+    "picamera"
+  ],
+  "author": "",
+  "license": "MIT"
+}
