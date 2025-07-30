@@ -13,7 +13,6 @@ class EmotionDetector {
         this.emotionLabels = ['Angry', 'Disgust', 'Fear', 'Happy', 'Sad', 'Surprise', 'Neutral'];
         this.isInitialized = false;
         
-        // Webcam configuration for Raspberry Pi
         this.webcamOpts = {
             width: 640,
             height: 480,
@@ -64,21 +63,12 @@ class EmotionDetector {
     async loadFaceCascade() {
         try {
             console.log('Loading face cascade for OpenCV.js...');
-            
-            // For opencv.js, we need to use the built-in cascade or load it differently
-            // opencv.js has built-in cascades that we can access
-            
-            // Method 1: Use built-in cascade data
+
             this.faceCascade = new cv.CascadeClassifier();
-            
-            // Load the default frontal face cascade that comes with opencv.js
-            // opencv.js includes some pre-compiled cascades
+
             const cascadeFile = 'haarcascade_frontalface_default.xml';
-            
-            // For opencv.js, we need to load the cascade data differently
-            // Let's try to create a cascade with the built-in data
+
             try {
-                // This is the correct way for opencv.js
                 this.faceCascade.load(cascadeFile);
                 
                 if (this.faceCascade.empty()) {
@@ -91,7 +81,6 @@ class EmotionDetector {
             } catch (loadError) {
                 console.log('Built-in cascade loading failed, trying alternative method...');
                 
-                // Alternative: Load from file system if available
                 await this.loadCascadeFromFile();
             }
             
@@ -105,18 +94,14 @@ class EmotionDetector {
         const cascadePath = path.join(__dirname, 'models', 'haarcascade_frontalface_default.xml');
         
         try {
-            // Ensure we have the cascade file
             if (!await fs.pathExists(cascadePath)) {
                 await this.downloadHaarCascade(cascadePath);
             }
             
-            // For opencv.js, we might need to read the file and process it differently
             const cascadeData = await fs.readFile(cascadePath, 'utf8');
-            
-            // opencv.js expects cascade data in a specific format
-            // We'll use a simpler approach with manual face detection
+
             console.log('Using alternative face detection method...');
-            this.faceCascade = null; // We'll implement manual detection
+            this.faceCascade = null;
             
         } catch (error) {
             console.error('Failed to load cascade from file:', error);
@@ -149,7 +134,6 @@ class EmotionDetector {
         }
     }
 
-    // Capture image using libcamera-still
     async captureImage(outputPath = 'capture.jpg') {
         try {
             const command = `libcamera-still -o ${outputPath} --nopreview --timeout 1000 --width 640 --height 480`;
@@ -169,12 +153,10 @@ class EmotionDetector {
         try {
             console.log('Processing image:', imagePath);
             
-            // Verify image exists
             if (!await fs.pathExists(imagePath)) {
                 throw new Error(`Image file not found: ${imagePath}`);
             }
             
-            // Read image with Sharp and convert to format opencv.js can handle
             const imageBuffer = await sharp(imagePath)
                 .ensureAlpha()
                 .raw()
@@ -184,7 +166,6 @@ class EmotionDetector {
             
             console.log('Image loaded:', info);
             
-            // Create Mat from image data
             src = cv.matFromImageData({
                 data: new Uint8ClampedArray(data),
                 width: info.width,
@@ -195,7 +176,6 @@ class EmotionDetector {
                 throw new Error('Failed to create source image matrix');
             }
             
-            // Convert to grayscale
             gray = new cv.Mat();
             cv.cvtColor(src, gray, cv.COLOR_RGBA2GRAY);
             
@@ -205,12 +185,10 @@ class EmotionDetector {
             
             console.log('Image converted to grayscale');
             
-            // Detect faces
             const faces = await this.detectFaces(gray);
             
             const results = [];
             
-            // Process detected faces
             faces.forEach((face, index) => {
                 console.log(`Processing face ${index + 1}:`, face);
                 
@@ -240,16 +218,16 @@ class EmotionDetector {
     async detectFaces(grayMat) {
         try {
             if (this.faceCascade && !this.faceCascade.empty()) {
-                // Use Haar cascade if available
+
                 const faces = new cv.RectVector();
                 
                 this.faceCascade.detectMultiScale(
                     grayMat,
                     faces,
-                    1.1,    // scale factor
-                    3,      // min neighbors
-                    0,      // flags
-                    new cv.Size(30, 30) // min size
+                    1.1,
+                    3,
+                    0,
+                    new cv.Size(30, 30)
                 );
                 
                 const results = [];
@@ -267,21 +245,18 @@ class EmotionDetector {
                 return results;
                 
             } else {
-                // Fallback: Use simple blob detection or contour detection
                 console.log('Using alternative face detection...');
                 return await this.alternativeFaceDetection(grayMat);
             }
             
         } catch (error) {
             console.error('Face detection error:', error);
-            // Return empty array if detection fails
             return [];
         }
     }
 
     async alternativeFaceDetection(grayMat) {
         try {
-            // Simple alternative: look for face-like regions using contours
             const thresh = new cv.Mat();
             cv.threshold(grayMat, thresh, 0, 255, cv.THRESH_BINARY + cv.THRESH_OTSU);
             
@@ -292,16 +267,13 @@ class EmotionDetector {
             
             const faces = [];
             
-            // Look for contours that might be faces (rough approximation)
             for (let i = 0; i < contours.size(); i++) {
                 const contour = contours.get(i);
                 const rect = cv.boundingRect(contour);
                 
-                // Filter by size (faces should be reasonably sized)
                 if (rect.width > 50 && rect.height > 50 && 
                     rect.width < grayMat.cols * 0.8 && rect.height < grayMat.rows * 0.8) {
                     
-                    // Check aspect ratio (faces are roughly square-ish)
                     const aspectRatio = rect.width / rect.height;
                     if (aspectRatio > 0.6 && aspectRatio < 1.4) {
                         faces.push(rect);
@@ -311,7 +283,6 @@ class EmotionDetector {
                 contour.delete();
             }
             
-            // Clean up
             thresh.delete();
             contours.delete();
             hierarchy.delete();
@@ -325,7 +296,6 @@ class EmotionDetector {
     }
 
     predictEmotion() {
-        // Mock emotion prediction
         const emotions = ['Happy', 'Sad', 'Angry', 'Surprise', 'Fear', 'Disgust', 'Neutral'];
         return emotions[Math.floor(Math.random() * emotions.length)];
     }
@@ -345,21 +315,6 @@ class EmotionDetector {
 
             console.log('Processing image for emotions...');
             const results = await this.processImage(imagePath);
-
-            // if (results.length > 0) {
-            // console.log('Detected faces and emotions:');
-            // results.forEach((result, index) => {
-            //     console.log(`Face ${index + 1}: ${result.emotion} at (${result.x}, ${result.y})`);
-            // });
-
-            // // ✅ 가장 첫 번째 얼굴의 감정으로 LED 제어
-            // const primaryEmotion = results[0].emotion;
-            // setEmotionLed(primaryEmotion);
-
-            // } else {
-            // console.log('No faces detected');
-            // setEmotionLed('Neutral'); // 얼굴 없으면 Neutral 처리
-            // }
 
             if (results.length > 0) {
             const primaryEmotion = results[0].emotion;
@@ -381,7 +336,6 @@ class EmotionDetector {
         }
     }
 
-    // emotion-detector.js
     async startRealTimeDetection(intervalMs = 10000) {
         console.log('Starting real-time emotion detection...');
         console.log(`Interval: ${intervalMs / 1000} seconds`);
@@ -393,7 +347,7 @@ class EmotionDetector {
 
             if (results.length > 0) {
                 const primaryEmotion = results[0].emotion;
-                setEmotionLed(primaryEmotion); // 감정에 맞는 LED ON
+                setEmotionLed(primaryEmotion);
             } else {
                 setEmotionLed('Neutral');
             }
@@ -403,17 +357,14 @@ class EmotionDetector {
             setEmotionLed('Neutral');
             }
 
-            // 다음 감지 예약
             setTimeout(loop, intervalMs);
         };
 
-        // 첫 실행
         await loop();
     }
 
 }
 
-// Main execution
 async function main() {
   const detector = new EmotionDetector();
 
@@ -425,17 +376,14 @@ async function main() {
     process.exit(1);
   }
 
-  // 기본값: 실시간 감정 감지 시작
-  await detector.startRealTimeDetection(10000); // 10초 간격
+  await detector.startRealTimeDetection(10000);
 }
 
-// Handle graceful shutdown
 process.on('SIGINT', () => {
     console.log('\nShutting down gracefully...');
     process.exit(0);
 });
 
-// Run the application
 if (require.main === module) {
     main().catch(console.error);
 }

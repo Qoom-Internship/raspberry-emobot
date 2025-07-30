@@ -20,7 +20,7 @@ function turnOffAll() {
 
 function setEmotionLed(emotion) {
   console.log(`감정 인식 결과: ${emotion}`);
-  turnOffAll(); // 기존 LED 상태 리셋
+  turnOffAll();
 
   const pin = emotionToGpio[emotion];
   if (pin != null) {
